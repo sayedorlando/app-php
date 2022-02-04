@@ -1,0 +1,43 @@
+---
+- hosts: 192.168.239.148
+  vars_files: vars/apache_pkg.yaml
+
+  tasks:
+  - name: Installation du serveur apache et php
+    yum:
+      name: "{{ item }}"
+      state: present
+    loop:
+      "{{ apache_packages }}"
+    when: ansible_facts ['os_family'] == "RedHat"
+
+
+  - name: creation de répertoires
+    file:
+      path: /var/www/html
+      state: directory
+      mode: '0755'
+
+  - name: copie des sources de l'app
+    copy:
+      src: app/
+       dest: /var/www/html
+
+  - name: Démarrage du service apache
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+  - name: installation mysql
+    yum:
+      name: "{{ item }}"
+      state: present
+    loop:
+      "{{ mariadb_packages }}"
+    when: ansible_facts['os_family'] == "RedHat"
+
+  - name: Activation et démarrage du serveur mariadb
+    systemd:
+      name: mariadb
+      state: started
+      enable: yes
